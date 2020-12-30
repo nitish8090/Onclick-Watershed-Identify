@@ -21,11 +21,11 @@ class PointTool(QgsMapTool):
 
 
 class MyCanvas(QgsMapCanvas):
-    def __init__(self):
+    def __init__(self, dem_path):
         super(MyCanvas, self).__init__()
         # Initialize paths and all
         self.csv_file_path = r"store_coordinates.csv"
-        self.dem_path = r"D:\Nitish\1220_Dec\5_DEM_to_Stream_micro\Input Data\mndrayal_dem.img"
+        self.dem_path = dem_path
 
         self.pointLayer = None
         self.dem_layer = None
@@ -36,9 +36,7 @@ class MyCanvas(QgsMapCanvas):
         self.initTools()
 
     def setMyLayers(self):
-        """
-        Sets the DEM to display
-        """
+        # Sets the DEM to display
         self.dem_layer = QgsRasterLayer(self.dem_path, "InDEM")
         if self.dem_layer.isValid():
             print("Raster Loaded")
@@ -48,6 +46,9 @@ class MyCanvas(QgsMapCanvas):
     def initUI(self):
         button = QtWidgets.QPushButton(self)
         button.setText("Test Button")
+
+        label = QtWidgets.QLabel(self)
+        label.setText(self.dem_path.split("\\")[-1])
 
     def initTools(self):
         tool = PointTool(self)
@@ -71,19 +72,19 @@ class MyCanvas(QgsMapCanvas):
         # symbol.setColor(Qcolor.fromRgb(255,128,0))
 
         self.setLayers([self.pointLayer, self.dem_layer])
-        canvas.refreshAllLayers()
+        self.refreshAllLayers()
 
 
 # QgsApplication.setPrefixPath(r"C:\Program Files\QGIS 3.16", True)
-
 # Create a reference to the QgsApplication.  Setting the second argument to False disables the GUI.
 qgs = QgsApplication([], True)
-qgs.setPrefixPath(r"C:\Program Files\QGIS 3.16", True)
+# qgs.setPrefixPath(r"C:\Program Files\QGIS 3.16", True)
 
 # Load providers
 qgs.initQgis()
 
-canvas = MyCanvas()
+# Create canvas and show
+canvas = MyCanvas(dem_path=r"D:\Nitish\1220_Dec\5_DEM_to_Stream_micro\Input Data\mndrayal_dem.img")
 canvas.show()
 
 # qgs.exitQgis()
