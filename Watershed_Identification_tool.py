@@ -23,18 +23,27 @@ class PointTool(QgsMapTool):
 class MyCanvas(QgsMapCanvas):
     def __init__(self):
         super(MyCanvas, self).__init__()
+        # Initialize paths and all
+        self.csv_file_path = r"store_coordinates.csv"
+        self.dem_path = r"D:\Nitish\1220_Dec\5_DEM_to_Stream_micro\Input Data\mndrayal_dem.img"
+
+        self.pointLayer = None
+        self.dem_layer = None
+
+        # Initialize the functionality of the app
         self.initUI()
         self.setMyLayers()
         self.initTools()
-        self.csv_file_path = r"store_coordinates.csv"
 
     def setMyLayers(self):
-        rlayer_path = r"D:\Nitish\1220_Dec\5_DEM_to_Stream_micro\Input Data\mndrayal_dem.img"
-        self.rlayer = QgsRasterLayer(rlayer_path, "InDEM")
-        if self.rlayer.isValid():
+        """
+        Sets the DEM to display
+        """
+        self.dem_layer = QgsRasterLayer(self.dem_path, "InDEM")
+        if self.dem_layer.isValid():
             print("Raster Loaded")
-        self.setExtent(self.rlayer.extent())
-        self.setLayers([self.rlayer])
+        self.setExtent(self.dem_layer.extent())
+        self.setLayers([self.dem_layer])
 
     def initUI(self):
         button = QtWidgets.QPushButton(self)
@@ -51,15 +60,17 @@ class MyCanvas(QgsMapCanvas):
         with open(self.csv_file_path, 'w') as csv_file:
             csv_file.write(to_write)
 
-        uri = "file:///store_coordinates.csv?delimiter=%s&xField=%s&yField=%s&crs=%s" % (
+        uri = "file:///" + sys.path[0] + "/store_coordinates.csv?delimiter=%s&xField=%s&yField=%s&crs=%s" % (
             ",", "long", "lat", "epsg:4326")
-        pointLayer = QgsVectorLayer(uri, 'New CSV', 'delimitedtext')
+        self.pointLayer = QgsVectorLayer(uri, 'New CSV', 'delimitedtext')
+        if self.pointLayer.isValid():
+            print("Point Loaded and Created")
 
         # symbol = QgsSymbol.defaultSymbol(pointLayer.geometryType())
         # symbol = renderer.symbol()
         # symbol.setColor(Qcolor.fromRgb(255,128,0))
 
-        self.setLayers([pointLayer, self.rlayer])
+        self.setLayers([self.pointLayer, self.dem_layer])
         canvas.refreshAllLayers()
 
 
