@@ -1,13 +1,34 @@
+__author__ = "Nitish Patel"
+__date__ = "3 January 2021"
+
+"""
+****************************************************************************
+    Watershed Tool
+    ---------------------
+    Date                 : January 2021
+    Copyright            : 
+    Email                : 
+*****************************************************************************
+*                                                                           *
+*   Development Notes:                                                      *
+*                                                                           *
+*****************************************************************************
+"""
+
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from qgis.core import *
 from qgis.gui import *
-from qgis.PyQt.QtCore import Qt
+# from qgis.PyQt.QtCore import Qt
 import sys
-import qgis
+# import qgis
+from PyQt5.QtCore import QObject, pyqtSlot
 
 import processing
 from processing.core.Processing import Processing
+
+
+# TODO: Fix processing not found in pycharm
 
 
 class PointTool(QgsMapTool):
@@ -31,6 +52,7 @@ class MyCanvas(QgsMapCanvas):
 
         # Initialize paths and all
         self.csv_file_path = r"temp_dir\store_coordinates.csv"
+        # TODO: Make this to accept file from file dialog
         self.dem_path = dem_path
 
         self.pointLayer = None
@@ -51,12 +73,29 @@ class MyCanvas(QgsMapCanvas):
         self.setLayers([self.dem_layer])
 
     def initUI(self):
+        # TODO: Change Button name
         self.button = QtWidgets.QPushButton(self)
-        self.button.setText("Test Button")
-        self.button.released.connect(self.generateBasin())
+        self.button.setText("Generate Watershed")
+        self.button.released.connect(self.generateBasin)
+
+        # TODO: Change button name and give function
+        self.button2 = QtWidgets.QPushButton(self)
+        self.button2.setText("Generate Water")
+
+        # TODO: Make a proper open file dailog and forward its value to dem raster
+        self.openFileNameDialog()
 
         label = QtWidgets.QLabel(self)
         label.setText(self.dem_path.split("\\")[-1])
+
+    # TODO: Make this function better and understand it
+    def openFileNameDialog(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "", "Python Files (*.py)",
+                                                  options=options)
+        if fileName:
+            print(fileName)
 
     def initTools(self):
         tool = PointTool(self)
@@ -80,35 +119,35 @@ class MyCanvas(QgsMapCanvas):
         # self.generateBasin()
 
     def generateBasin(self):
-        basin_path = 'temp_dir/hehl.tif'
+        self.basin_path = 'temp_dir/{}_basin.tif'.format(self.dem_path.split("\\")[-1].split(".")[0])
         coordinate_string = '{},{} [EPSG:32643]'.format(self.long, self.lat)
         processing.run("grass7:r.water.outlet", {'input': dem_path,
                                                  'coordinates': coordinate_string,
-                                                 'output': basin_path,
+                                                 'output': self.basin_path,
                                                  'GRASS_REGION_PARAMETER': None, 'GRASS_REGION_CELLSIZE_PARAMETER': 0,
                                                  'GRASS_RASTER_FORMAT_OPT': '', 'GRASS_RASTER_FORMAT_META': ''})
-        basin_raster = QgsRasterLayer(basin_path, "basin")
-        if basin_raster.isValid():
+        # Making basin raster a self solved the problem of raster not shhowing on the screen
+        self.basin_raster = QgsRasterLayer(self.basin_path, "basin")
+        if self.basin_raster.isValid():
             print("Basin Raster Created")
-        self.setLayers([basin_raster, self.pointLayer, self.dem_layer])
+        self.setLayers([self.basin_raster, self.pointLayer, self.dem_layer])
         self.refreshAllLayers()
 
 
-# QgsApplication.setPrefixPath(r"C:\Program Files\QGIS 3.16", True)
-# Create a reference to the QgsApplication.  Setting the second argument to False disables the GUI.
-qgs = QgsApplication([], True)
-# qgs.setPrefixPath(r"C:\Program Files\QGIS 3.16", True)
+if __name__ == '__main__':
+    # QgsApplication.setPrefixPath(r"C:\Program Files\QGIS 3.16", True)
+    # Create a reference to the QgsApplication.  Setting the second argument to False disables the GUI.
+    qgs = QgsApplication([], True)
+    # qgs.setPrefixPath(r"C:\Program Files\QGIS 3.16", True)
 
-# Load providers
-qgs.initQgis()
-Processing.initialize()
+    # Load providers
+    qgs.initQgis()
+    Processing.initialize()
 
-# Create canvas and show
-dem_path = sys.path[0] + r"\example_raster\dem.img"
-canvas = MyCanvas(dem_path=dem_path)
-canvas.show()
+    # Create canvas and show
+    dem_path = sys.path[0] + r"\example_raster\dem.img"
+    canvas = MyCanvas(dem_path=dem_path)
+    canvas.show()
 
-
-
-# qgs.exitQgis()
-sys.exit(qgs.exec_())
+    # qgs.exitQgis()
+    sys.exit(qgs.exec_())

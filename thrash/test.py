@@ -1,4 +1,3 @@
-import sys
-sys.path.append("Hello")
-for path in sys.path:
-    print(path)
+a = 0
+if(a):
+    print("lol")
