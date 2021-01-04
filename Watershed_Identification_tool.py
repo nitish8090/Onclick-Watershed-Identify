@@ -135,7 +135,7 @@ class MyCanvas(QgsMapCanvas):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         dem_path, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
-                                                  "Image Files (*.img, *.tif);;GeoTIFF Files (*.tif)",
+                                                  "Image Files (*.img *.tif);;GeoTIFF Files (*.tif)",
                                                   options=options)
         if dem_path:
             self.setDemLayer(dem_path)
