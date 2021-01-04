@@ -15,8 +15,8 @@ __date__ = "3 January 2021"
 *****************************************************************************
 """
 
-from PyQt5 import QtWidgets, QtGui                          # For buttons and Fonts
-from PyQt5.QtWidgets import QFileDialog                     # For file dialog
+from PyQt5 import QtWidgets, QtGui  # For buttons and Fonts
+from PyQt5.QtWidgets import QFileDialog  # For file dialog
 # from PyQt5.QtWidgets import QApplication, QMainWindow
 from qgis.core import *
 from qgis.gui import *
@@ -38,6 +38,7 @@ class PointTool(QgsMapTool):
     Point selection tool used to generate point on clicking
     and forward it to the canvas and processing part
     """
+
     def __init__(self, canvas):
         QgsMapTool.__init__(self, canvas)
         self.canvas = canvas
@@ -47,13 +48,14 @@ class PointTool(QgsMapTool):
         y = event.pos().y()
 
         point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
-        canvas.getCoordinates(point)        # Forwarding coordinates to canvas
+        canvas.getCoordinates(point)  # Forwarding coordinates to canvas
 
 
 class MyCanvas(QgsMapCanvas):
     """
     Main Canvas Class
     """
+
     def __init__(self):
         super(MyCanvas, self).__init__()
         self.setWindowTitle("Watershed Tool")
@@ -64,6 +66,7 @@ class MyCanvas(QgsMapCanvas):
 
         self.pointLayer = None
         self.long, self.lat = 0, 0
+        self.isStreamsGenerated = False
 
         # Initialize the functionality of the app
         self.initUI()
@@ -160,7 +163,10 @@ class MyCanvas(QgsMapCanvas):
 
         self.xLabel.setText("X: {}".format(self.long))
         self.yLabel.setText("Y: {}".format(self.lat))
-        self.setLayers([self.pointLayer, self.dem_layer])
+        if self.isStreamsGenerated:
+            self.setLayers([self.pointLayer, self.stream_raster, self.dem_layer])
+        else:
+            self.setLayers([self.pointLayer, self.dem_layer])
 
     def generateBasin(self):
         # Generate Basin on button click
@@ -179,7 +185,23 @@ class MyCanvas(QgsMapCanvas):
         self.refreshAllLayers()
 
     def generateStreams(self):
-        pass
+        # pass
+        self.stream_raster_path = 'temp_dir/stream_raster.tif'
+        processing.run("grass7:r.stream.extract",
+                       {'elevation': self.dem_layer,
+                        'accumulation': None, 'depression': None, 'threshold': 50, 'mexp': 0, 'stream_length': 0,
+                        'd8cut': None, 'memory': 300, 'stream_raster': self.stream_raster_path,
+                        'stream_vector': 'TEMPORARY_OUTPUT', 'direction': 'TEMPORARY_OUTPUT',
+                        'GRASS_REGION_PARAMETER': None, 'GRASS_REGION_CELLSIZE_PARAMETER': 0,
+                        'GRASS_RASTER_FORMAT_OPT': '',
+                        'GRASS_RASTER_FORMAT_META': '', 'GRASS_OUTPUT_TYPE_PARAMETER': 0, 'GRASS_VECTOR_DSCO': '',
+                        'GRASS_VECTOR_LCO': '', 'GRASS_VECTOR_EXPORT_NOCAT': False})
+        self.stream_raster = QgsRasterLayer(self.stream_raster_path, "stream_raster")
+        if self.stream_raster.isValid():
+            print("Streams Generated")
+            self.isStreamsGenerated = True
+            self.setLayers([self.stream_raster, self.dem_layer])
+        # self.addMapLayer(self.stream_raster)
 
 
 if __name__ == '__main__':
