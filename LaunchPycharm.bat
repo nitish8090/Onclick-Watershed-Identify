@@ -13,5 +13,5 @@ set PYTHONHOME=%OSGEO4W_ROOT%\apps\Python37
 set QT_PLUGIN_PATH=%OSGEO4W_ROOT%\apps\qgis\qtplugins;%OSGEO4W_ROOT%\apps\qt5\plugins
 set QGIS_PREFIX_PATH=%OSGEO4W_ROOT:\=/%/apps/qgis
 
-"C:\Program Files\JetBrains\PyCharm Community Edition 2020.2.3\bin\pycharm64.exe"
+"C:\Program Files\JetBrains\PyCharm Community Edition 2020.2\bin\pycharm64.exe"
 pause
